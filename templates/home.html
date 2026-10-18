@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ shop_name }} — Fresh Snacks &amp; Cloud POS{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-inner">
+            <span class="hero-badge">✨ Since 2025 • Heaven of Delicious</span>
+            {% if shop_logo %}
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/' + shop_logo) }}"
+                         alt="{{ shop_name }} Logo"
+                         class="shop-logo"
+                         onerror="this.src='/uploads/{{ shop_logo }}'">
+                </div>
+            {% endif %}
+            <h1 class="hero-title">{{ shop_name }}</h1>
+            <p class="hero-tagline">Hot, crispy, made-to-order street snacks, signature bread omelettes, and spicy 65 delicacies crafted fresh every single day.</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('menu') }}" class="btn btn-primary btn-large">Explore Full Menu</a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('billing') }}" class="btn btn-secondary btn-large">Open POS Terminal</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-secondary btn-large">Staff POS Login</a>
+                {% endif %}
+            </div>
+
+            <div class="hero-highlights">
+                <div class="hero-highlight-item">
+                    <span class="hero-highlight-icon">🔥</span>
+                    <span>Made Fresh to Order</span>
+                </div>
+                <div class="hero-highlight-item">
+                    <span class="hero-highlight-icon">⚡</span>
+                    <span>Fast Counter &amp; Takeaway Service</span>
+                </div>
+                <div class="hero-highlight-item">
+                    <span class="hero-highlight-icon">🧾</span>
+                    <span>Instant Digital &amp; PDF Receipts</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <section class="offers-section">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Special Offers &amp; Combos</h2>
+                <p class="section-subtitle">Limited-time deals and happy-hour savings available in store</p>
+            </div>
+        </div>
+        <div class="offers-grid">
+            {% if offers %}
+                {% for offer in offers %}
+                <div class="offer-card">
+                    <span class="offer-tag">Active Deal</span>
+                    <h3>{{ offer.title }}</h3>
+                    <p>{{ offer.description }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="offer-card">
+                    <span class="offer-tag">Popular Deal</span>
+                    <h3>Buy 2 Get 1 Free</h3>
+                    <p>On selected chips and crispy evening snacks</p>
+                </div>
+                <div class="offer-card">
+                    <span class="offer-tag">Weekend Offer</span>
+                    <h3>Weekend Special</h3>
+                    <p>20% off on all fresh bakery items</p>
+                </div>
+                <div class="offer-card">
+                    <span class="offer-tag">7 PM – 9 PM</span>
+                    <h3>Happy Hours</h3>
+                    <p>10% discount on hot snacks during evening happy hours</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="popular-section">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Customer Favorites</h2>
+                <p class="section-subtitle">Our top-selling snacks freshly prepared at the counter</p>
+            </div>
+            <a href="{{ url_for('menu') }}" class="btn btn-secondary">View All Items &rarr;</a>
+        </div>
+
+        <div class="products-grid">
+            {% for product in popular_products %}
+            <div class="product-card">
+                <div class="product-media">
+                    {% if product.image_url %}
+                        <img src="{{ url_for('static', filename='images/products/' + product.image_url) }}"
+                             alt="{{ product.name }}"
+                             class="product-image"
+                             onerror="this.src='/uploads/{{ product.image_url }}'; this.onerror=function(){this.parentElement.innerHTML='<div class=\'product-image-placeholder\'>{{ product.name[0]|upper }}</div>';}">
+                    {% else %}
+                        <div class="product-image-placeholder">{{ product.name[0]|upper }}</div>
+                    {% endif %}
+                    <span class="product-category-pill">{{ product.category|format_category }}</span>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    {% if product.description %}
+                        <p class="product-description">{{ product.description }}</p>
+                    {% else %}
+                        <p class="product-description">Freshly prepared {{ product.category|format_category|lower }} served hot.</p>
+                    {% endif %}
+                    <div class="product-footer">
+                        <span class="product-price">₹{{ "%.2f"|format(product.price) }}</span>
+                        <span class="stock-badge in-stock">Available Fresh</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not popular_products %}
+            <div class="no-products">
+                <p>No snacks added to the catalog yet. Log in as Admin to add menu items.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

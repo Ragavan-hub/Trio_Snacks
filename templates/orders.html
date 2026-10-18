@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Orders History — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Orders &amp; Invoice History</h1>
+            <p>Review completed bills, download PDF invoices, and track revenue</p>
+        </div>
+        <div class="period-filters">
+            <a href="{{ url_for('orders', period='today') }}" class="period-btn {% if period == 'today' %}active{% endif %}">Today</a>
+            <a href="{{ url_for('orders', period='week') }}" class="period-btn {% if period == 'week' %}active{% endif %}">Last 7 Days</a>
+            <a href="{{ url_for('orders', period='month') }}" class="period-btn {% if period == 'month' %}active{% endif %}">Last 30 Days</a>
+            <a href="{{ url_for('orders', period='all') }}" class="period-btn {% if period == 'all' %}active{% endif %}">All Time</a>
+        </div>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>Completed Orders ({{ period|title }})</h3>
+            <p class="summary-value">{{ total_orders }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Total Revenue ({{ period|title }})</h3>
+            <p class="summary-value">₹{{ "%.2f"|format(total_sales) }}</p>
+        </div>
+    </div>
+
+    <div class="orders-table-container">
+        {% if orders %}
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Date &amp; Time</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>{{ order.invoice_number }}</strong></td>
+                    <td>{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    <td>
+                        {% if order.customer_name %}
+                            {{ order.customer_name }}
+                            {% if order.customer_phone %}
+                                <small class="text-muted" style="display:block;">{{ order.customer_phone }}</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">Walk-in Customer</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.items|length }} {{ 'item' if order.items|length == 1 else 'items' }}</td>
+                    <td><strong>₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-secondary">View</a>
+                            <a href="{{ url_for('invoice_pdf', order_id=order.id) }}" class="btn btn-sm btn-primary">PDF Invoice</a>
+                            {% if session.role == 'admin' %}
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteOrder({{ order.id }}, '{{ order.invoice_number }}')">Delete</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="no-orders">
+                <h3 style="margin-bottom: 0.5rem;">No orders found for this period</h3>
+                <p style="margin-bottom: 1rem;">Switch to "All Time" to view historical transactions or create a new bill in POS.</p>
+                <div style="display:flex;gap:0.75rem;justify-content:center;">
+                    {% if period != 'all' %}
+                        <a href="{{ url_for('orders', period='all') }}" class="btn btn-secondary">View All Time Orders</a>
+                    {% endif %}
+                    <a href="{{ url_for('billing') }}" class="btn btn-primary">Go to POS Billing</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function deleteOrder(orderId, invoiceNumber) {
+    showConfirmModal({
+        title: 'Delete Invoice?',
+        message: `Are you sure you want to permanently delete invoice ${invoiceNumber}? This action cannot be undone.`,
+        confirmText: 'Delete Invoice',
+        danger: true,
+        onConfirm: () => {
+            fetch(`/orders/${orderId}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Invoice deleted', 'success');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showNotification('Error deleting order: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error deleting order', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

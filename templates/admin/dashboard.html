@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Store &amp; POS Analytics Dashboard</h1>
+            <p>Monitor daily revenue, top-performing snacks, and store configuration</p>
+        </div>
+        <div style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+            <a href="{{ url_for('admin_products') }}" class="btn btn-primary">🍔 Manage Products</a>
+            <a href="{{ url_for('admin_offers') }}" class="btn btn-secondary">🏷️ Manage Offers</a>
+            <a href="{{ url_for('admin_settings') }}" class="btn btn-secondary">⚙️ Store Settings</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Active Menu Items</h3>
+            <p class="stat-value">{{ total_products }}</p>
+        </div>
+        <div class="stat-card success">
+            <h3>Today's Revenue</h3>
+            <p class="stat-value">₹{{ "%.2f"|format(today_sales) }}</p>
+        </div>
+        <div class="stat-card info">
+            <h3>Today's Orders</h3>
+            <p class="stat-value">{{ today_orders_count }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>All-Time Revenue ({{ all_time_orders_count }} bills)</h3>
+            <p class="stat-value">₹{{ "%.2f"|format(all_time_sales) }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <h2>Top Selling Snacks</h2>
+            {% if top_items %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Snack Item</th>
+                        <th>Category</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in top_items %}
+                    <tr>
+                        <td><strong>{{ item[0] }}</strong></td>
+                        <td>{{ item[1]|format_category }}</td>
+                        <td>{{ item[2] }}</td>
+                        <td>₹{{ "%.2f"|format(item[3] or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="no-data">No sales recorded yet. Complete a bill in POS to see top-selling snacks.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-card">
+            <h2>Recent Invoices</h2>
+            {% if recent_orders %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date &amp; Time</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><strong>{{ order.invoice_number }}</strong></td>
+                        <td>{{ order.created_at.strftime('%d %b, %I:%M %p') }}</td>
+                        <td><strong>₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-secondary">Receipt</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="no-data">No recent invoices found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

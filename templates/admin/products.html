@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Products — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Product Catalog Management</h1>
+            <p>Add, edit, or remove menu items displayed on the public website and POS terminal</p>
+        </div>
+        <div style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="showAddProductModal()">+ Add New Product</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">&larr; Dashboard</a>
+        </div>
+    </div>
+
+    <div class="products-table-container">
+        {% if products %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>#{{ product.id }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            {% if product.image_url %}
+                                <img src="{{ url_for('static', filename='images/products/' + product.image_url) }}"
+                                     alt="{{ product.name }}"
+                                     style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);"
+                                     onerror="this.src='/uploads/{{ product.image_url }}'">
+                            {% else %}
+                                <div style="width:44px;height:44px;border-radius:8px;background:var(--gradient-brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">
+                                    {{ product.name[0]|upper }}
+                                </div>
+                            {% endif %}
+                            <strong>{{ product.name }}</strong>
+                        </div>
+                    </td>
+                    <td><span class="badge success">{{ product.category|format_category }}</span></td>
+                    <td style="max-width: 280px; color: var(--text-secondary); font-size: 0.85rem;">
+                        {{ product.description or '—' }}
+                    </td>
+                    <td><strong>₹{{ "%.2f"|format(product.price) }}</strong></td>
+                    <td>
+                        <div style="display:flex;gap:0.4rem;">
+                            <button type="button" class="btn btn-sm btn-secondary"
+                                    onclick='showEditProductModal({{ product.id }}, {{ product.name|tojson }}, {{ product.category|tojson }}, {{ product.price }}, {{ (product.description or "")|tojson }}, {{ (product.image_url or "")|tojson }})'>
+                                Edit
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    onclick='deleteProduct({{ product.id }}, {{ product.name|tojson }})'>
+                                Remove
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="no-data">No products available. Click "+ Add New Product" to populate your menu.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div id="product-modal" class="modal">
+    <div class="modal-content">
+        <button type="button" class="close" onclick="closeProductModal()">&times;</button>
+        <h2 id="modal-title" style="margin-bottom: 1.25rem;">Add New Snack Product</h2>
+        <form id="product-form" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="product-name">Product Name *</label>
+                <input type="text" id="product-name" name="name" placeholder="e.g., Cheese Bread Omelette" required>
+            </div>
+            <div class="form-group">
+                <label for="product-category">Category *</label>
+                <select id="product-category" name="category" required>
+                    <option value="">Select Category</option>
+                    <option value="Bread_omelete">Bread Omelette</option>
+                    <option value="Sixtyfive_65">Sixty Five (65)</option>
+                    <option value="Sandwich">Sandwich</option>
+                    <option value="Bakery">Bakery</option>
+                    <option value="Snacks">Crispy Snacks</option>
+                    <option value="Drinks">Drinks &amp; Beverages</option>
+                    <option value="Sweets">Sweets &amp; Desserts</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="product-price">Price (₹) *</label>
+                <input type="number" id="product-price" name="price" step="0.01" min="0" placeholder="e.g., 45.00" required>
+            </div>
+            <div class="form-group">
+                <label for="product-image">Product Image</label>
+                <input type="file" id="product-image" name="image" accept="image/*">
+                <small>Supported formats: JPG, PNG, WEBP, GIF (Max 5MB)</small>
+                <div id="image-preview"></div>
+            </div>
+            <div class="form-group">
+                <label for="product-description">Description</label>
+                <textarea id="product-description" name="description" rows="3" placeholder="Short appetizing description of the item..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

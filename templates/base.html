@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ global_shop_name }} — Heaven of Delicious{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="{{ url_for('home') }}">
+                    {% if global_shop_logo %}
+                        <img src="{{ url_for('static', filename='images/' + global_shop_logo) }}"
+                             alt="{{ global_shop_name }}"
+                             class="nav-brand-logo"
+                             onerror="this.style.display='none'">
+                    {% else %}
+                        <span class="nav-brand-badge">TS</span>
+                    {% endif %}
+                    <div class="nav-brand-text">
+                        <span>{{ global_shop_name }}</span>
+                        <span class="nav-brand-sub">Heaven of Delicious</span>
+                    </div>
+                </a>
+            </div>
+
+            <button type="button" class="nav-toggle" id="mobile-nav-toggle" aria-label="Toggle Menu">☰</button>
+
+            <ul class="nav-menu" id="main-nav-menu">
+                <li>
+                    <a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('menu') }}" class="{% if request.path.startswith('/menu') %}active{% endif %}">Menu</a>
+                </li>
+                {% if session.user_id %}
+                    <li>
+                        <a href="{{ url_for('billing') }}" class="{% if request.path.startswith('/billing') %}active{% endif %}">POS Billing</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('orders') }}" class="{% if request.path.startswith('/orders') %}active{% endif %}">Orders</a>
+                    </li>
+                    {% if session.role == 'admin' %}
+                        <li>
+                            <a href="{{ url_for('admin_dashboard') }}" class="{% if request.path.startswith('/admin') %}active{% endif %}">Admin</a>
+                        </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('logout') }}" class="nav-logout">Logout ({{ session.username }})</a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="{{ url_for('login') }}" class="{% if request.path.startswith('/login') %}active{% endif %}">Staff Login</a>
+                    </li>
+                {% endif %}
+                <li>
+                    <button type="button" class="nav-theme-btn" data-theme-toggle title="Toggle Dark Mode">🌙</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            <span>{{ message }}</span>
+                            <button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:inherit;">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h4>{{ global_shop_name }}</h4>
+                    <p>Freshly prepared hot snacks, bread omelettes, 65 specials &amp; bakery treats.</p>
+                </div>
+                <div class="footer-contact">
+                    {% if global_shop_address %}
+                        <span>📍 {{ global_shop_address }}</span>
+                    {% endif %}
+                    {% if global_shop_phone %}
+                        <span>📞 {{ global_shop_phone }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <p>&copy; {{ current_year }} {{ global_shop_name }}. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

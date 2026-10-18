@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ order.invoice_number }} — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Invoice Receipt Details</h1>
+            <p>Digital transaction record for {{ order.invoice_number }}</p>
+        </div>
+        <div style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+            <a href="{{ url_for('orders') }}" class="btn btn-secondary">&larr; Back to Orders</a>
+            <button type="button" class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+            <a href="{{ url_for('invoice_pdf', order_id=order.id) }}" class="btn btn-primary">⬇️ Download PDF Invoice</a>
+        </div>
+    </div>
+
+    <div class="order-detail-card">
+        <div class="order-header">
+            <div>
+                <span class="badge success" style="margin-bottom:0.5rem;">PAID INVOICE</span>
+                <h2>{{ order.invoice_number }}</h2>
+                <p class="order-date">Issued on {{ order.created_at.strftime('%d %B %Y at %I:%M %p') }}</p>
+            </div>
+            <div style="text-align: right;">
+                <h3 style="font-size:1.1rem;color:var(--text-primary);">{{ global_shop_name }}</h3>
+                <p style="font-size:0.85rem;color:var(--text-secondary);">{{ global_shop_address }}</p>
+                <p style="font-size:0.85rem;color:var(--text-secondary);">{{ global_shop_phone }}</p>
+            </div>
+        </div>
+
+        <div class="customer-section" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;background:var(--bg-subtle);padding:1rem 1.25rem;border-radius:var(--radius-md);">
+            <div>
+                <span style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Customer Name</span>
+                <p style="font-weight:600;">{{ order.customer_name if order.customer_name else 'Walk-in Customer' }}</p>
+            </div>
+            <div>
+                <span style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Customer Phone</span>
+                <p style="font-weight:600;">{{ order.customer_phone if order.customer_phone else '—' }}</p>
+            </div>
+            <div>
+                <span style="font-size:0.78rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Billed By</span>
+                <p style="font-weight:600;">{{ order.user.username|title if order.user else 'Staff' }}</p>
+            </div>
+        </div>
+
+        <div class="items-section">
+            <h3>Ordered Items</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Snack Item</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ item.product.name if item.product else 'Item #' ~ item.product_id }}</strong></td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ "%.2f"|format(item.unit_price) }}</td>
+                        <td><strong>₹{{ "%.2f"|format(item.total_price) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals-section">
+            <div class="total-row">
+                <span>Subtotal:</span>
+                <span>₹{{ "%.2f"|format(order.subtotal) }}</span>
+            </div>
+            {% if order.discount_amount > 0 %}
+            <div class="total-row">
+                <span>Discount:</span>
+                <span>-₹{{ "%.2f"|format(order.discount_amount) }}</span>
+            </div>
+            {% endif %}
+            {% if order.tax_amount > 0 %}
+            <div class="total-row">
+                <span>Tax / GST:</span>
+                <span>+₹{{ "%.2f"|format(order.tax_amount) }}</span>
+            </div>
+            {% endif %}
+            <div class="total-row final-total">
+                <span>Grand Total:</span>
+                <span>₹{{ "%.2f"|format(order.total_amount) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

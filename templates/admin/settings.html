@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Store Settings — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Store &amp; Billing Settings</h1>
+            <p>Customize shop branding, contact details, tax rates, and invoice footer</p>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="settings-card" style="max-width: 760px; margin: 0 auto;">
+        <form method="POST" action="{{ url_for('admin_settings_update') }}" enctype="multipart/form-data">
+            <h2>Store Branding &amp; Contact Information</h2>
+            <div class="form-group">
+                <label for="shop-logo">Shop Logo</label>
+                <input type="file" id="shop-logo" name="logo" accept="image/*">
+                <small>Upload your shop emblem (JPG, PNG, WEBP, GIF — Max 5MB)</small>
+                {% if settings.get('shop_logo') %}
+                    <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-subtle); border-radius: var(--radius-sm);">
+                        <img src="{{ url_for('static', filename='images/' + settings.get('shop_logo')) }}"
+                             alt="Shop Logo"
+                             style="width: 64px; height: 64px; object-fit: cover; border-radius: 12px; border: 2px solid var(--primary-color);"
+                             onerror="this.src='/uploads/{{ settings.get('shop_logo') }}'">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Current active logo</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="shop-name">Shop Name *</label>
+                <input type="text" id="shop-name" name="shop_name" value="{{ settings.get('shop_name', 'Trio Snacks') }}" required>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1rem;">
+                <div class="form-group">
+                    <label for="shop-address">Shop Address</label>
+                    <input type="text" id="shop-address" name="shop_address" value="{{ settings.get('shop_address', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="shop-phone">Shop Phone Number</label>
+                    <input type="text" id="shop-phone" name="shop_phone" value="{{ settings.get('shop_phone', '') }}">
+                </div>
+            </div>
+
+            <h2 style="margin-top: 1.5rem;">POS Billing &amp; Invoice Configuration</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;">
+                <div class="form-group">
+                    <label for="tax-rate">Tax Rate (%)</label>
+                    <input type="number" id="tax-rate" name="tax_rate" step="0.1" min="0" value="{{ settings.get('tax_rate', '5.0') }}" required>
+                    <small>Set to 0 for tax-free billing</small>
+                </div>
+                <div class="form-group">
+                    <label for="gst-rate">Additional GST Rate (%)</label>
+                    <input type="number" id="gst-rate" name="gst_rate" step="0.1" min="0" value="{{ settings.get('gst_rate', '0.0') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="stock-alert-threshold">Low Stock Alert Threshold</label>
+                    <input type="number" id="stock-alert-threshold" name="stock_alert_threshold" min="0" value="{{ settings.get('stock_alert_threshold', '10') }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="invoice-footer">PDF Invoice Footer Message</label>
+                <textarea id="invoice-footer" name="invoice_footer" rows="2">{{ settings.get('invoice_footer', 'Thank you for your business!') }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">Save Configuration</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

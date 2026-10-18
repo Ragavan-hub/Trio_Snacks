@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Special Offers — {{ global_shop_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Manage Promotional Offers</h1>
+            <p>Configure special deals and combo banners highlighted on the public home page</p>
+        </div>
+        <div style="display:flex;gap:0.65rem;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="showAddOfferModal()">+ Add New Offer</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">&larr; Dashboard</a>
+        </div>
+    </div>
+
+    <div class="offers-table-container">
+        {% if offers %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Display Order</th>
+                    <th>Offer Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offer in offers %}
+                <tr>
+                    <td>{{ offer.display_order }}</td>
+                    <td><strong>{{ offer.title }}</strong></td>
+                    <td>{{ offer.description }}</td>
+                    <td>
+                        {% if offer.is_active %}
+                            <span class="badge success">Active</span>
+                        {% else %}
+                            <span class="badge danger">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:0.4rem;">
+                            <button type="button" class="btn btn-sm btn-secondary"
+                                    onclick='showEditOfferModal({{ offer.id }}, {{ offer.title|tojson }}, {{ offer.description|tojson }}, {{ offer.display_order }}, {{ "true" if offer.is_active else "false" }})'>
+                                Edit
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    onclick='deleteOffer({{ offer.id }}, {{ offer.title|tojson }})'>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="no-data">No offers configured yet. Click "+ Add New Offer" to create a promotional banner.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Offer Modal -->
+<div id="offer-modal" class="modal">
+    <div class="modal-content">
+        <button type="button" class="close" onclick="closeOfferModal()">&times;</button>
+        <h2 id="modal-title" style="margin-bottom: 1.25rem;">Add Promotional Offer</h2>
+        <form id="offer-form" method="POST">
+            <div class="form-group">
+                <label for="offer-title">Offer Title *</label>
+                <input type="text" id="offer-title" name="title" required placeholder="e.g., Buy 2 Get 1 Free">
+            </div>
+            <div class="form-group">
+                <label for="offer-description">Description *</label>
+                <textarea id="offer-description" name="description" rows="3" required placeholder="e.g., On selected chips and evening snacks"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="offer-order">Display Order</label>
+                <input type="number" id="offer-order" name="display_order" min="0" value="0">
+                <small>Lower numbers appear first on the home page (0 = first)</small>
+            </div>
+            <div class="form-group">
+                <label style="display:inline-flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" id="offer-active" name="is_active" checked style="width:auto;">
+                    <span>Active (Display on public home page)</span>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeOfferModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Offer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showAddOfferModal() {
+    const modal = document.getElementById('offer-modal');
+    const form = document.getElementById('offer-form');
+    document.getElementById('modal-title').textContent = 'Add Promotional Offer';
+    form.action = '/admin/offers/add';
+    form.method = 'POST';
+    form.reset();
+    document.getElementById('offer-active').checked = true;
+    modal.style.display = 'block';
+}
+
+function showEditOfferModal(id, title, description, order, isActive) {
+    const modal = document.getElementById('offer-modal');
+    const form = document.getElementById('offer-form');
+    document.getElementById('modal-title').textContent = 'Edit Promotional Offer';
+    form.action = `/admin/offers/${id}/edit`;
+    form.method = 'POST';
+
+    document.getElementById('offer-title').value = title;
+    document.getElementById('offer-description').value = description;
+    document.getElementById('offer-order').value = order;
+    document.getElementById('offer-active').checked = Boolean(isActive);
+    modal.style.display = 'block';
+}
+
+function closeOfferModal() {
+    document.getElementById('offer-modal').style.display = 'none';
+}
+
+function deleteOffer(offerId, offerTitle) {
+    showConfirmModal({
+        title: 'Delete Offer?',
+        message: `Are you sure you want to delete the offer "${offerTitle}"?`,
+        confirmText: 'Delete Offer',
+        danger: true,
+        onConfirm: () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/offers/${offerId}/delete`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+{% endblock %}

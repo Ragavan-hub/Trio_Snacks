@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}POS Billing Terminal — {{ global_shop_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/billing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="billing-container">
+    <div class="billing-header">
+        <div class="billing-title-group">
+            <h1>POS Billing Terminal</h1>
+            <span class="pos-live-badge">
+                <span class="pos-live-dot"></span> Ready
+            </span>
+        </div>
+        <div class="billing-controls">
+            <button type="button" id="language-toggle" class="btn btn-icon" title="Switch Language (English / Tamil)">🌐 தமிழ்</button>
+            <button type="button" id="dark-mode-toggle" class="btn btn-icon" title="Toggle Dark Mode">🌙</button>
+            <a href="{{ url_for('orders') }}" class="btn btn-secondary">Recent Bills</a>
+        </div>
+    </div>
+
+    <div class="billing-layout">
+        <!-- Left Panel: Product Catalog -->
+        <div class="products-panel">
+            <div class="panel-header">
+                <h2 data-i18n="products">Menu Catalog</h2>
+                <span style="font-size: 0.8rem; color: #D1D5DB;">Click any item to add</span>
+            </div>
+            <div class="product-filters">
+                <div class="search-box">
+                    <input type="text" id="product-search" placeholder="Search snacks or scan barcode..." autofocus aria-label="Search or scan product">
+                    <button type="button" class="btn btn-primary" onclick="searchProducts()">Search</button>
+                </div>
+                <div class="category-filters">
+                    <button type="button" class="category-btn active" data-category="all" onclick="filterByCategory('all')">All</button>
+                    {% for category in categories %}
+                        <button type="button" class="category-btn" data-category="{{ category }}" onclick="filterByCategory('{{ category }}')">
+                            {{ category|format_category }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="products-list" id="products-list">
+                {% for product in products %}
+                <div class="product-item" data-product-id="{{ product.id }}" data-category="{{ product.category }}" onclick="addToCart({{ product.id }})">
+                    <div class="product-item-top">
+                        <div class="product-item-image">
+                            {% if product.image_url %}
+                                <img src="{{ url_for('static', filename='images/products/' + product.image_url) }}"
+                                     alt="{{ product.name }}"
+                                     onerror="this.src='/uploads/{{ product.image_url }}'; this.onerror=function(){this.parentElement.innerHTML='<div class=\'product-image-placeholder-small\'>{{ product.name[0]|upper }}</div>';}">
+                            {% else %}
+                                <div class="product-image-placeholder-small">{{ product.name[0]|upper }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="product-item-info">
+                            <h4>{{ product.name }}</h4>
+                            <p class="product-category">{{ product.category|format_category }}</p>
+                        </div>
+                    </div>
+                    <div class="product-item-actions">
+                        <span class="product-price">₹{{ "%.2f"|format(product.price) }}</span>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addToCart({{ product.id }})">+ Add</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Panel: Cart & Checkout -->
+        <div class="cart-panel">
+            <div class="panel-header">
+                <h2>
+                    <span data-i18n="cart">Current Bill</span>
+                    <span class="cart-badge-count" id="cart-count-badge">0 items</span>
+                </h2>
+                <button type="button" class="btn btn-sm btn-danger" onclick="clearCart()" data-i18n="clear">Clear</button>
+            </div>
+
+            <div class="cart-items" id="cart-items">
+                <p class="empty-cart" data-i18n="cart_empty">Cart is empty. Tap any snack on the left to add it.</p>
+            </div>
+
+            <div class="customer-details">
+                <div class="customer-details-grid">
+                    <input type="text" id="customer-name-input" placeholder="Customer Name (Optional)" aria-label="Customer Name">
+                    <input type="text" id="customer-phone-input" placeholder="Phone Number (Optional)" aria-label="Customer Phone">
+                </div>
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span data-i18n="subtotal">Subtotal:</span>
+                    <span id="subtotal">₹0.00</span>
+                </div>
+                <div class="summary-row">
+                    <label for="discount-input" data-i18n="discount">Discount (₹):</label>
+                    <input type="number" id="discount-input" min="0" step="1" value="0" onchange="calculateTotal()">
+                </div>
+                {% if tax_rate > 0 %}
+                <div class="summary-row">
+                    <span><span data-i18n="tax">Tax / GST:</span> ({{ tax_rate }}%)</span>
+                    <span id="tax-amount">₹0.00</span>
+                </div>
+                {% else %}
+                <span id="tax-amount" style="display:none;">₹0.00</span>
+                {% endif %}
+                <div class="summary-row total-row">
+                    <span data-i18n="total">Grand Total:</span>
+                    <span id="total-amount">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="checkout-actions">
+                <button type="button" id="process-order-btn" class="btn btn-primary btn-large btn-block" onclick="processOrder()" data-i18n="process_order">
+                    Complete Order &amp; Generate Bill
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.taxRate = {{ tax_rate|default(0, true) }};
+</script>
+<script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/barcode.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initI18n();
+        initBilling();
+        loadCart();
+    });
+</script>
+{% endblock %}

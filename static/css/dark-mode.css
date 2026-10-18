@@ -1,0 +1,48 @@
+/* ==========================================================================
+   Global Dark Mode Theme (`body.dark-mode`)
+   ========================================================================== */
+
+body.dark-mode {
+    --bg-body: #0B0F19;
+    --bg-surface: #111827;
+    --bg-subtle: #1F2937;
+    --text-primary: #F9FAFB;
+    --text-secondary: #D1D5DB;
+    --text-muted: #9CA3AF;
+    --border-color: #1F2937;
+    --border-strong: #374151;
+    --primary-light: rgba(245, 158, 11, 0.16);
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+}
+
+body.dark-mode .offer-card {
+    background: linear-gradient(135deg, #111827 0%, #1F2937 100%);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+body.dark-mode .offer-tag {
+    color: var(--accent-gold);
+}
+
+body.dark-mode .product-price {
+    color: var(--accent-gold);
+}
+
+body.dark-mode .period-btn.active,
+body.dark-mode .category-btn.active {
+    background: var(--primary-color);
+    color: #111827;
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .data-table thead,
+body.dark-mode .orders-table thead,
+body.dark-mode .items-table thead {
+    background-color: #1F2937;
+}
+
+body.dark-mode .modal-content {
+    background-color: #111827;
+    border-color: #374151;
+}
